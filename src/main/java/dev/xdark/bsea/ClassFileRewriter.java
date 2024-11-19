@@ -125,16 +125,24 @@ public final class ClassFileRewriter {
 
 	static InvokeDynamicInstruction rewriteInvokeDynamicInstruction(ConstantPoolBuilder poolBuilder, InvokeDynamicInstruction i) {
 		var invokedynamic = i.invokedynamic();
+		var bootstrap = invokedynamic.bootstrap();
+		var replacement = rewriteBootstrapMethodEntry(poolBuilder, bootstrap);
+		if (bootstrap == replacement)
+			return i;
 		return InvokeDynamicInstruction.of(poolBuilder.invokeDynamicEntry(
-				rewriteBootstrapMethodEntry(poolBuilder, invokedynamic.bootstrap()),
+				replacement,
 				invokedynamic.nameAndType()
 		));
 	}
 
 	static ConstantInstruction.LoadConstantInstruction rewriteLDC(ConstantPoolBuilder poolBuilder, ConstantInstruction.LoadConstantInstruction i) {
+		var entry = i.constantEntry();
+		var replacement = rewriteLoadableConstantEntry(poolBuilder, entry);
+		if (entry == replacement)
+			return i;
 		return ConstantInstruction.ofLoad(
 				i.opcode(),
-				rewriteLoadableConstantEntry(poolBuilder, i.constantEntry())
+				replacement
 		);
 	}
 
